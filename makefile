@@ -19,6 +19,11 @@ SRC = $(foreach dir, $(SRC_REP), $(wildcard $(dir)/*.$(EXT)))
 OBJ = $(addsuffix .o, $(basename $(subst ${SRC_REP}, ${OBJ_REP}, ${SRC})))
 BIN = main
 
+UNAME = $(shell uname)
+ifeq ($(UNAME), Darwin)
+CC = gcc-5
+endif
+
 .PHONY: clean mrproper clear dir
 .SUFFIXES:
 

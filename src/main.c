@@ -1,6 +1,8 @@
 #include <getopt.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
+
 #include <mpfr.h>
 
 
@@ -33,9 +35,10 @@ int main(int argc, char * argv[]) {
     char verbose = 0;
     char * outputPath = NULL;
     int opt;
+    char * pixels = NULL;
 
 
-    mpfr_inits(minR, maxR, minI, maxI);
+    mpfr_inits(minR, maxR, minI, maxI, NULL);
 
     while ((opt = getopt_long(argc, argv, "r:R:i:I:n:o:W:H:p:vh", options, NULL))
         >= 0) {
@@ -116,6 +119,8 @@ int main(int argc, char * argv[]) {
                         return 1;
             }
     }
+
+    pixels = malloc(3 * width * height * sizeof(char));
 
 
     return 0;

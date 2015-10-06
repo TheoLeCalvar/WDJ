@@ -1,6 +1,6 @@
 CC = gcc
-LIBRARIES = -O3
-CFLAGS = -W -Wall -Wextra $(LIBRARIES)
+LDFLAGS = -lgmp  -lmpfr -g
+CFLAGS = -W -Wall -Wextra $(LDFLAGS)
 #
 # SRC extension
 #

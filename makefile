@@ -4,7 +4,7 @@ CFLAGS = -W -Wall -Wextra $(LIBRARIES)
 #
 # SRC extension
 #
-EXT = cpp
+EXT = c
 #
 # Directories.
 #

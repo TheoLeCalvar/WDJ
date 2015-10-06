@@ -139,10 +139,34 @@ int main(int argc, char * argv[]) {
 
     pixels = malloc(3 * width * height * sizeof(char));
 
+    if (mpfr_nan_p(cR)) {
+        mpfr_set_str(cR, "-0.8", 0, MPFR_RNDN);
+    }
+
+    if (mpfr_nan_p(cI)) {
+        mpfr_set_str(cI, "0.156", 0, MPFR_RNDN);
+    }
+
+    if (mpfr_nan_p(minR)) {
+        mpfr_set_str(minR, "-2.5", 0, MPFR_RNDN);
+    }
+
+    if (mpfr_nan_p(maxR)) {
+        mpfr_set_str(maxR, "2.5", 0, MPFR_RNDN);
+    }
+
+    if (mpfr_nan_p(minI)) {
+        mpfr_set_str(minI, "-2", 0, MPFR_RNDN);
+    }
+
+    if (mpfr_nan_p(maxI)) {
+        mpfr_set_str(maxI, "2", 0, MPFR_RNDN);
+    }
+
     legacy(pixels, width, height, minR, minI, maxR, maxI, cR, cI, iterations);
 
-
     mpfr_clears(maxR, minR, maxI, minI, cR, cI, NULL);
+    free(pixels);
 
     return 0;
 }

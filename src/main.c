@@ -6,6 +6,7 @@
 #include <mpfr.h>
 
 
+#include "legacy.h"
 #include "julia.h"
 
 struct option options[] = {
@@ -13,6 +14,8 @@ struct option options[] = {
     {"maxR",        0, NULL, 'R'},
     {"minI",        0, NULL, 'i'},
     {"maxI",        0, NULL, 'I'},
+    {"cstR",        0, NULL, 'c'},
+    {"cstI",        0, NULL, 'C'},
     {"precision",   0, NULL, 'p'},
     {"iteration",   0, NULL, 'n'},
     {"output",      0, NULL, 'o'},
@@ -30,15 +33,15 @@ void usage() {
 int main(int argc, char * argv[]) {
     int width = 1024;
     int height = 1024;
-    int iterations = 10000;
-    mpfr_t minR, maxR, minI, maxI;
+    int iterations = 1000;
+    mpfr_t minR, maxR, minI, maxI, cR, cI;
     char verbose = 0;
     char * outputPath = NULL;
     int opt;
     char * pixels = NULL;
 
 
-    mpfr_inits(minR, maxR, minI, maxI, NULL);
+    mpfr_inits(minR, maxR, minI, maxI, cR, cI, NULL);
 
     while ((opt = getopt_long(argc, argv, "r:R:i:I:n:o:W:H:p:vh", options, NULL))
         >= 0) {
@@ -109,6 +112,20 @@ int main(int argc, char * argv[]) {
                         }
                         break;
 
+                    case 'C':
+                        if (mpfr_set_str(cI, optarg, 0, MPFR_RNDN)) {
+                            printf("Invalid number format (%s)\n", optarg);
+                            exit(1);
+                        }
+                        break;
+
+                    case 'c':
+                        if (mpfr_set_str(cR, optarg, 0, MPFR_RNDN)) {
+                            printf("Invalid number format (%s)\n", optarg);
+                            exit(1);
+                        }
+                        break;
+
                     case '?':
                         usage();
                         return 1;
@@ -122,6 +139,10 @@ int main(int argc, char * argv[]) {
 
     pixels = malloc(3 * width * height * sizeof(char));
 
+    legacy(pixels, width, height, minR, minI, maxR, maxI, cR, cI, iterations);
+
+
+    mpfr_clears(maxR, minR, maxI, minI, cR, cI, NULL);
 
     return 0;
 }

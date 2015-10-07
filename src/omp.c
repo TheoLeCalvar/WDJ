@@ -2,10 +2,10 @@
 #include <stdio.h>
 
 void omp(char* pixels, int w, int h, mpfr_t minR, mpfr_t minI, mpfr_t maxR, mpfr_t maxI, mpfr_t cR, mpfr_t cI, int iter) {
-    mpfr_t rangR, rangI, bR, bI;
-    int i, j, r;
+    mpfr_t rangR, rangI;
+    int i, j;
 
-    mpfr_inits(rangR, rangI, bR, bI, NULL);
+    mpfr_inits(rangR, rangI, NULL);
 
     mpfr_sub(rangR, maxR, minR, MPFR_RNDN);
     mpfr_sub(rangI, maxI, minI, MPFR_RNDN);
@@ -13,13 +13,21 @@ void omp(char* pixels, int w, int h, mpfr_t minR, mpfr_t minI, mpfr_t maxR, mpfr
     mpfr_div_ui(rangI, rangI, (unsigned long) h, MPFR_RNDN);
 
 
-    #pragma omp parallel for firstprivate(bR)
+    #pragma omp parallel for
     for (i = 0; i < w; i++) {
+        mpfr_t bR;
+
+        mpfr_init(bR);
         mpfr_mul_ui(bR, rangR, (unsigned long) i, MPFR_RNDN);
         mpfr_add(bR, bR, minR, MPFR_RNDN);
 
-        #pragma omp parallel for firstprivate(bI)
+        #pragma omp parallel for
         for (j = 0; j < h; j++) {
+            int r;
+            mpfr_t bI;
+
+            mpfr_init(bI);
+
             mpfr_mul_ui(bI, rangI, (unsigned long) j, MPFR_RNDN);
             mpfr_add(bI, bI, minI, MPFR_RNDN);
 
@@ -36,8 +44,12 @@ void omp(char* pixels, int w, int h, mpfr_t minR, mpfr_t minI, mpfr_t maxR, mpfr
                 pixels[((i + (j * w)) * 3) + 1] = 0;
                 pixels[((i + (j * w)) * 3) + 2] = 0;
             }
+
+            mpfr_clear(bI);
         }
+
+        mpfr_clear(bR);
     }
 
-    mpfr_clears(rangR, rangI, bR, bI, NULL);
+    mpfr_clears(rangR, rangI, NULL);
 }

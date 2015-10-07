@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include <mpfr.h>
 
@@ -22,13 +23,47 @@ struct option options[] = {
     {"output",      0, NULL, 'o'},
     {"width",       0, NULL, 'W'},
     {"height",      0, NULL, 'H'},
+    {"algo",        0, NULL, 'a'},
     {"verbose",     0, NULL, 'v'},
     {"help",        0, NULL, 'h'},
     {0,             0, 0,     0}
 };
 
+typedef void (*algo_f)(char *, int, int, mpfr_t, mpfr_t, mpfr_t, mpfr_t, mpfr_t, mpfr_t, int);
+
+typedef struct algo {
+        char    name[32];
+        char    desc[256];
+        algo_f  func;
+} algo_t;
+
+algo_t algos[] = {
+        {"leg",  "legacy algorithm",         &legacy},
+        {"omp", "openMP algorithm",          &omp},
+        {"mpi",  "openMP + MPI algorithm",   NULL}
+};
+
+#define ALGO_SIZE       (sizeof(algos) / sizeof(algo_t))
+
+int algo_index(const char* name) {
+        for (unsigned int i = 0; i < ALGO_SIZE; i++) {
+                if (!strcmp(name, algos[i].name)) {
+                        return i;
+                }
+        }
+
+        return -1;
+}
+
+void algo_help(void) {
+        for (unsigned int i = 0; i < ALGO_SIZE; i++) {
+                printf("    - %-16s : %s\n", algos[i].name, algos[i].desc);
+        }
+}
+
 void usage() {
     printf("Ici on mettra l'usage quand on aura le temps =).\n");
+    algo_help();
 }
 
 void    pixels2BMP(const char* pixels, int w, int h, const char * path);
@@ -41,12 +76,14 @@ int main(int argc, char * argv[]) {
     char verbose = 0;
     char * outputPath = NULL;
     int opt;
+    int algo = 0;
     char * pixels = NULL;
+
 
 
     mpfr_inits(minR, maxR, minI, maxI, cR, cI, NULL);
 
-    while ((opt = getopt_long(argc, argv, "r:R:i:I:c:C:n:o:W:H:p:vh", options, NULL))
+    while ((opt = getopt_long(argc, argv, "r:R:i:I:c:C:n:o:W:H:p:a:vh", options, NULL))
         >= 0) {
 
             switch (opt) {
@@ -72,6 +109,15 @@ int main(int argc, char * argv[]) {
 
                     case 'o':
                         outputPath = optarg;
+                        break;
+
+                    case 'a':
+                        algo = algo_index(optarg);
+                        if (algo < 0) {
+                                printf("wrong algorithm. Choose one :\n");
+                                algo_help();
+                                return -1;
+                        }
                         break;
 
                     case 'p': {
@@ -166,7 +212,7 @@ int main(int argc, char * argv[]) {
         mpfr_set_str(maxI, "2", 0, MPFR_RNDN);
     }
 
-    legacy(pixels, width, height, minR, minI, maxR, maxI, cR, cI, iterations);
+    algos[algo].func(pixels, width, height, minR, minI, maxR, maxI, cR, cI, iterations);
 
     pixels2BMP(pixels, width, height, outputPath);
 

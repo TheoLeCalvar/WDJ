@@ -1,5 +1,5 @@
 CC = gcc
-LDFLAGS = -lgmp  -lmpfr -g
+LDFLAGS = -lgmp  -lmpfr -fopenmp -g
 CFLAGS = -W -Wall -Wextra $(LDFLAGS)
 #
 # SRC extension

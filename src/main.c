@@ -7,6 +7,7 @@
 
 
 #include "legacy.h"
+#include "omp.h"
 #include "julia.h"
 
 struct option options[] = {
@@ -45,7 +46,7 @@ int main(int argc, char * argv[]) {
 
     mpfr_inits(minR, maxR, minI, maxI, cR, cI, NULL);
 
-    while ((opt = getopt_long(argc, argv, "r:R:i:I:n:o:W:H:p:vh", options, NULL))
+    while ((opt = getopt_long(argc, argv, "r:R:i:I:c:C:n:o:W:H:p:vh", options, NULL))
         >= 0) {
 
             switch (opt) {

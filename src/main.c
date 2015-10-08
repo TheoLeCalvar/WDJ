@@ -214,9 +214,12 @@ int main(int argc, char * argv[]) {
 
     algos[algo].func(pixels, width, height, minR, minI, maxR, maxI, cR, cI, iterations);
 
+    printf("Generating image.\n");
+
     pixels2BMP(pixels, width, height, outputPath);
 
-    mpfr_clears(maxR, minR, maxI, minI, cR, cI, NULL);
+    mpfr_clears(minR, maxR, minI, maxI, cR, cI, NULL);
+    mpfr_free_cache();
     free(pixels);
 
     return 0;

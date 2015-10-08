@@ -1,6 +1,6 @@
 CC = gcc
 LDFLAGS = -lgmp  -lmpfr -fopenmp -g
-CFLAGS = -W -Wall -Wextra $(LDFLAGS)
+CFLAGS = -W -Wall -Wextra -O3 $(LDFLAGS)
 #
 # SRC extension
 #

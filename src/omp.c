@@ -15,7 +15,7 @@ void omp(
     int iter
 ) {
     mpfr_t rangR, rangI;
-    int i,j;
+    int i, j, count = 0;
 
     mpfr_inits(rangR, rangI, NULL);
 
@@ -24,15 +24,15 @@ void omp(
     mpfr_div_ui(rangR, rangR, (unsigned long) w, MPFR_RNDN);
     mpfr_div_ui(rangI, rangI, (unsigned long) h, MPFR_RNDN);
 
-    for (i = 0; i < w; i++) {
+    for (i = 0; i < h; i++) {
         mpfr_t bR;
 
         mpfr_init(bR);
         mpfr_mul_ui(bR, rangR, (unsigned long) i, MPFR_RNDN);
         mpfr_add(bR, bR, minR, MPFR_RNDN);
 
-        #pragma omp parallel for shared(bR) private(j) schedule(dynamic, 16)
-        for (j = 0; j < h; j++) {
+        #pragma omp parallel for shared(bR) schedule(dynamic, 1)
+        for (j = 0; j < w; j++) {
             int r;
             mpfr_t bI;
 
@@ -46,20 +46,23 @@ void omp(
             r = iterateOverJulia(bR, bI, cR, cI, iter);
 
             if (r >= 0) {
-                pixels[(i + (j * w)) * 3] = (char)r;
-                pixels[((i + (j * w)) * 3) + 1] = (char)r;
-                pixels[((i + (j * w)) * 3) + 2] = (char)r;
+                pixels[(j + (i * w)) * 3] = (char)r;
+                pixels[((j + (i * w)) * 3) + 1] = (char)r;
+                pixels[((j + (i * w)) * 3) + 2] = (char)r;
             } else {
-                pixels[(i + (j * w)) * 3] = 0;
-                pixels[((i + (j * w)) * 3) + 1] = 0;
-                pixels[((i + (j * w)) * 3) + 2] = 0;
+                pixels[(j + (i * w)) * 3] = 0;
+                pixels[((j + (i * w)) * 3) + 1] = 0;
+                pixels[((j + (i * w)) * 3) + 2] = 0;
             }
 
             mpfr_clear(bI);
+            mpfr_free_cache();
         }
-        #pragma omp nowait
 
         mpfr_clear(bR);
+        count += 1;
+        fprintf(stdout, "%d/%d\r", count, w);
+        fflush(stdout);
     }
 
     mpfr_clears(rangR, rangI, NULL);

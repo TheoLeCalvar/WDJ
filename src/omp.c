@@ -1,9 +1,21 @@
-#include "legacy.h"
 #include <stdio.h>
+#include "legacy.h"
+#include "omp.h"
 
-void omp(char* pixels, int w, int h, mpfr_t minR, mpfr_t minI, mpfr_t maxR, mpfr_t maxI, mpfr_t cR, mpfr_t cI, int iter) {
+void omp(
+    char* pixels,
+    int w,
+    int h,
+    mpfr_t minR,
+    mpfr_t minI,
+    mpfr_t maxR,
+    mpfr_t maxI,
+    mpfr_t cR,
+    mpfr_t cI,
+    int iter
+) {
     mpfr_t rangR, rangI;
-    int i, j;
+    int i,j;
 
     mpfr_inits(rangR, rangI, NULL);
 
@@ -12,8 +24,6 @@ void omp(char* pixels, int w, int h, mpfr_t minR, mpfr_t minI, mpfr_t maxR, mpfr
     mpfr_div_ui(rangR, rangR, (unsigned long) w, MPFR_RNDN);
     mpfr_div_ui(rangI, rangI, (unsigned long) h, MPFR_RNDN);
 
-
-    #pragma omp parallel for
     for (i = 0; i < w; i++) {
         mpfr_t bR;
 
@@ -21,7 +31,7 @@ void omp(char* pixels, int w, int h, mpfr_t minR, mpfr_t minI, mpfr_t maxR, mpfr
         mpfr_mul_ui(bR, rangR, (unsigned long) i, MPFR_RNDN);
         mpfr_add(bR, bR, minR, MPFR_RNDN);
 
-        #pragma omp parallel for
+        #pragma omp parallel for shared(bR) private(j) schedule(dynamic, 16)
         for (j = 0; j < h; j++) {
             int r;
             mpfr_t bI;
@@ -47,6 +57,7 @@ void omp(char* pixels, int w, int h, mpfr_t minR, mpfr_t minI, mpfr_t maxR, mpfr
 
             mpfr_clear(bI);
         }
+        #pragma omp nowait
 
         mpfr_clear(bR);
     }

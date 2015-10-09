@@ -1,7 +1,18 @@
-#include "legacy.h"
 #include <stdio.h>
+#include "legacy.h"
 
-void legacy(char* pixels, int w, int h, mpfr_t minR, mpfr_t minI, mpfr_t maxR, mpfr_t maxI, mpfr_t cR, mpfr_t cI, int iter) {
+void legacy(
+    char* pixels,
+    int w,
+    int h,
+    mpfr_t minR,
+    mpfr_t minI,
+    mpfr_t maxR,
+    mpfr_t maxI,
+    mpfr_t cR,
+    mpfr_t cI,
+    int iter
+) {
     mpfr_t rangR, rangI, bR, bI;
     int i, j, r;
 
@@ -19,9 +30,7 @@ void legacy(char* pixels, int w, int h, mpfr_t minR, mpfr_t minI, mpfr_t maxR, m
         for (j = 0; j < h; j++) {
             mpfr_mul_ui(bI, rangI, (unsigned long) j, MPFR_RNDN);
             mpfr_add(bI, bI, minI, MPFR_RNDN);
-
             // mpfr_printf("%.128RNf + %.128RNfi\n", bR, bI);
-
             r = iterateOverJulia(bR, bI, cR, cI, iter);
 
             if (r >= 0) {
@@ -37,4 +46,5 @@ void legacy(char* pixels, int w, int h, mpfr_t minR, mpfr_t minI, mpfr_t maxR, m
     }
 
     mpfr_clears(rangR, rangI, bR, bI, NULL);
+    mpfr_free_cache();
 }

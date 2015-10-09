@@ -5,32 +5,31 @@ void legacy(
     char* pixels,
     int w,
     int h,
-    mpfr_t minR,
-    mpfr_t minI,
-    mpfr_t maxR,
-    mpfr_t maxI,
-    mpfr_t cR,
-    mpfr_t cI,
+    double minR,
+    double minI,
+    double maxR,
+    double maxI,
+    double cR,
+    double cI,
     int iter
 ) {
-    mpfr_t rangR, rangI, bR, bI;
+    double rangR, rangI, bR, bI;
     int i, j, r;
 
-    mpfr_inits(rangR, rangI, bR, bI, NULL);
+    rangR = maxR - minR;
+    rangI = maxI - minI;
 
-    mpfr_sub(rangR, maxR, minR, MPFR_RNDN);
-    mpfr_sub(rangI, maxI, minI, MPFR_RNDN);
-    mpfr_div_ui(rangR, rangR, (unsigned long) w, MPFR_RNDN);
-    mpfr_div_ui(rangI, rangI, (unsigned long) h, MPFR_RNDN);
+    rangR = rangR / w;
+    rangI = rangI / h;
 
     for (i = 0; i < w; i++) {
-        mpfr_mul_ui(bR, rangR, (unsigned long) i, MPFR_RNDN);
-        mpfr_add(bR, bR, minR, MPFR_RNDN);
+        bR = rangR * i;
+        bR += minR;
 
         for (j = 0; j < h; j++) {
-            mpfr_mul_ui(bI, rangI, (unsigned long) j, MPFR_RNDN);
-            mpfr_add(bI, bI, minI, MPFR_RNDN);
-            // mpfr_printf("%.128RNf + %.128RNfi\n", bR, bI);
+            bI = rangI * j;
+            bI += minI;
+
             r = iterateOverJulia(bR, bI, cR, cI, iter);
 
             if (r >= 0) {
@@ -44,7 +43,4 @@ void legacy(
             }
         }
     }
-
-    mpfr_clears(rangR, rangI, bR, bI, NULL);
-    mpfr_free_cache();
 }

@@ -46,11 +46,11 @@ void omp(
             r = iterateOverJulia(bR, bI, cR, cI, iter);
 
             if (r >= 0) {
-                pixels[(j + (i * w)) * 3] = (char)r;
+                pixels[(j  + (i * w)) * 3]      = (char)r;
                 pixels[((j + (i * w)) * 3) + 1] = (char)r;
                 pixels[((j + (i * w)) * 3) + 2] = (char)r;
             } else {
-                pixels[(j + (i * w)) * 3] = 0;
+                pixels[(j  + (i * w)) * 3]      = 0;
                 pixels[((j + (i * w)) * 3) + 1] = 0;
                 pixels[((j + (i * w)) * 3) + 2] = 0;
             }

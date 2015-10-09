@@ -23,7 +23,6 @@ int iterateOverJulia(mpfr_t r, mpfr_t i, mpfr_t cr, mpfr_t ci, int iterations) {
         if (mpfr_cmp_ui(ir2, (unsigned long) 10) > 0) {
             mpfr_clears(r_, i_, r2, i2, ri, ir2, NULL);
             mpfr_free_cache();
-
             return j;
         }
 

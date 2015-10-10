@@ -1,7 +1,6 @@
 #ifndef omp_h
 #define omp_h
 
-#include <stdarg.h>
 #include <mpfr.h>
 #include <omp.h>
 

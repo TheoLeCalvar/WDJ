@@ -29,7 +29,7 @@
 *.hex
 
 bin/
-obj/
+*.bmp
 
 # Debug files
 *.dSYM/

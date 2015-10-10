@@ -6,6 +6,7 @@ void pixels2BMP(const char* pixels, int w, int h, const char * path) {
     FILE *f = fopen(path, "wb");
 
     if (!f) {
+        fprintf(stderr, "Can't open %s.\n", path);
         return;
     }
 

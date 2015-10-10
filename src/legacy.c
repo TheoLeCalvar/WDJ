@@ -43,6 +43,9 @@ void legacy(
                 pixels[((i + (j * w)) * 3) + 2] = 0;
             }
         }
+
+        fprintf(stdout, "leg : %d/%d\r", i, w);
+        fflush(stdout);
     }
 
     mpfr_clears(rangR, rangI, bR, bI, NULL);

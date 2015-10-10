@@ -61,7 +61,7 @@ void omp(
 
         mpfr_clear(bR);
         count += 1;
-        fprintf(stdout, "%d/%d\r", count, w);
+        fprintf(stdout, "omp : %d/%d\r", count, w);
         fflush(stdout);
     }
 

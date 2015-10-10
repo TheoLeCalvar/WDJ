@@ -9,6 +9,7 @@
 #include "legacy.h"
 #include "omp.h"
 #include "bmp.h"
+#include "readconfig.h"
 
 struct option options[] = {
     {"minR",        0, NULL, 'r'},
@@ -82,14 +83,13 @@ int main(int argc, char * argv[]) {
     int width = 1024;
     int height = 1024;
     int iterations = 1000;
+    int precision;
     mpfr_t minR, maxR, minI, maxI, cR, cI;
     char verbose = 0;
-    char * outputPath = NULL;
+    char * outputPath = malloc(128);
     int opt;
     int algo = 0;
     char * pixels = NULL;
-
-
 
     mpfr_inits(minR, maxR, minI, maxI, cR, cI, NULL);
 
@@ -97,7 +97,7 @@ int main(int argc, char * argv[]) {
         (opt = getopt_long(
             argc,
             argv,
-            "r:R:i:I:c:C:n:o:W:H:p:a:vh",
+            "r:R:i:I:c:C:n:o:W:H:p:a:f:vh",
             options,
             NULL)
         ) >= 0
@@ -106,6 +106,25 @@ int main(int argc, char * argv[]) {
             case 'h':
                 usage();
                 return 0;
+
+            case 'f':
+                if ( readconfigfile(
+                      &width,
+                      &height,
+                      &iterations,
+                      &precision,
+                      minR,
+                      maxR,
+                      minI,
+                      maxI,
+                      cR,
+                      cI,
+                      outputPath,
+                      &algo,
+                      optarg ) == -1) {
+                    exit(EXIT_FAILURE);
+                }
+                break;
 
             case 'n':
                 iterations = atoi(optarg);
@@ -137,7 +156,7 @@ int main(int argc, char * argv[]) {
                 break;
 
             case 'p': {
-                int precision = atoi(optarg);
+                precision = atoi(optarg);
 
                 mpfr_set_default_prec(precision);
                 mpfr_set_prec(minR, precision);
@@ -238,11 +257,17 @@ int main(int argc, char * argv[]) {
         cI,
         iterations
     );
+
+    if (verbose) {
+        fprintf(stdout, "Generating image.\n");
+    }
+
     pixels2BMP(pixels, width, height, outputPath);
 
     mpfr_clears(maxR, minR, maxI, minI, cR, cI, NULL);
     mpfr_free_cache();
     free(pixels);
+    free(outputPath);
 
     return 0;
 }

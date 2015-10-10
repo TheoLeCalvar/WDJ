@@ -31,5 +31,8 @@
 bin/
 obj/
 
+*.png
+*.bmp
+
 # Debug files
 *.dSYM/

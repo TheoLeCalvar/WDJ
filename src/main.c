@@ -1,12 +1,18 @@
+#include <mpi.h>
 #include <getopt.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
 #include <png.h>
+#include <unistd.h>
+#include <sys/stat.h>
+
 #include "legacy.h"
 #include "omp.h"
 #include "julia.h"
+
+#include "task.h"
 
 struct option options[] = {
     {"minR",        0, NULL, 'r'},
@@ -20,6 +26,8 @@ struct option options[] = {
     {"output",      0, NULL, 'o'},
     {"width",       0, NULL, 'W'},
     {"height",      0, NULL, 'H'},
+    {"blockWidth",  0, NULL, 'b'},
+    {"blockHeight", 0, NULL, 'B'},
     {"algo",        0, NULL, 'a'},
     {"verbose",     0, NULL, 'v'},
     {"help",        0, NULL, 'h'},
@@ -30,10 +38,7 @@ typedef void (*algo_f)(
     char *,
     int,
     int,
-    double,
-    double,
-    double,
-    double,
+    tasks_t *,
     double,
     double,
     int
@@ -81,6 +86,8 @@ void pixels2PNG(const char* pixels, int w, int h, const char * path);
 int main(int argc, char * argv[]) {
     int width = 1024;
     int height = 1024;
+    int blockWidth = 16;
+    int blockHeight = 16;
     int iterations = 1000;
     double minR = -2.5;
     double maxR = 2.5;
@@ -93,12 +100,14 @@ int main(int argc, char * argv[]) {
     int opt;
     int algo = 0;
     char * pixels = NULL;
+    char hostname[256];
+    tasks_t tasks;
 
     while (
         (opt = getopt_long(
             argc,
             argv,
-            "r:R:i:I:c:C:n:o:W:H:p:a:vh",
+            "r:R:i:I:c:C:n:o:W:H:b:B:p:a:vh",
             options,
             NULL)
         ) >= 0
@@ -120,12 +129,21 @@ int main(int argc, char * argv[]) {
                 height = atoi(optarg);
                 break;
 
+            case 'b':
+                blockHeight = atoi(optarg);
+                break;
+
+            case 'B':
+                blockWidth = atoi(optarg);
+                break;
+
             case 'v':
                 verbose = 1;
                 break;
 
             case 'o':
                 outputPath = optarg;
+                printf("This option has no effect. Output will be in res/\n");
                 break;
 
             case 'a':
@@ -177,22 +195,50 @@ int main(int argc, char * argv[]) {
         }
     }
 
-    pixels = malloc(3 * width * height * sizeof(char));
+    MPI_Init( &argc, &argv);
+    getTasks(   &tasks,
+                minR, maxR,
+                minI, maxI,
+                width, height,
+                blockWidth, blockHeight
+            );
+    gethostname(hostname, 256);
 
-    algos[algo].func(pixels,
-        width,
-        height,
-        minR,
-        minI,
-        maxR,
-        maxI,
-        cR,
-        cI,
-        iterations
-    );
-    pixels2PNG(pixels, width, height, outputPath);
+    pixels = malloc(3 * blockWidth * blockHeight * sizeof(char));
+
+    for (; tasks.nextTask <= tasks.finalTask; ++tasks.nextTask) {
+        char fileName[256];
+        char dirname1[256];
+        char dirname2[256];
+
+        int blockX = tasks.nextTask % (width / blockWidth);
+        int blockY = tasks.nextTask / (width / blockWidth);
+
+        algos[algo].func(
+            pixels,
+            blockWidth,
+            blockHeight,
+            &tasks,
+            cR,
+            cI,
+            iterations
+        );
+
+        printf("Task %ld done with success on %s.\n", tasks.nextTask, hostname);
+
+        sprintf(dirname1, "res/Map0/LayerA/Zoom0/%d", blockY);
+        sprintf(dirname2, "%s/%d", dirname1, blockX);
+        sprintf(fileName, "%s/tile_%d_%d.png", dirname2, blockY, blockX);
+
+        mkdir(dirname1, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        mkdir(dirname2, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
+        pixels2PNG(pixels, blockWidth, blockHeight, fileName);
+    }
+
 
     free(pixels);
+    MPI_Finalize();
 
     return 0;
 }

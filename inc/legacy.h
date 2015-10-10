@@ -5,15 +5,13 @@
 #include <mpfr.h>
 
 #include "julia.h"
+#include "task.h"
 
 void legacy(
     char* pixels,
     int w,
     int h,
-    double minR,
-    double minI,
-    double maxR,
-    double maxI,
+    tasks_t * t,
     double cR,
     double cI,
     int iter

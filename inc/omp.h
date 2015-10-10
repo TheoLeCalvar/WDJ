@@ -5,15 +5,13 @@
 #include <omp.h>
 
 #include "julia.h"
+#include "task.h"
 
 void omp(
     char* pixels,
     int w,
     int h,
-    double minR,
-    double minI,
-    double maxR,
-    double maxI,
+    tasks_t * tasks,
     double cR,
     double cI,
     int iter

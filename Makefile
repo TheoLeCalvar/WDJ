@@ -1,4 +1,4 @@
-CC = gcc
+CC = mpicc
 LDFLAGS = -lgmp  -lmpfr -lpng -fopenmp -g
 CFLAGS = -W -Wall -Wextra -O3 $(LDFLAGS)
 #
@@ -21,7 +21,7 @@ BIN = main
 
 UNAME = $(shell uname)
 ifeq ($(UNAME), Darwin)
-CC = gcc-5
+CC = OMPI_CC=gcc-5 mpicc
 endif
 
 .PHONY: clean mrproper clear dir

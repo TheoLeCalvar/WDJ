@@ -5,19 +5,19 @@ void legacy(
     char* pixels,
     int w,
     int h,
-    double minR,
-    double minI,
-    double maxR,
-    double maxI,
+    tasks_t * t,
     double cR,
     double cI,
     int iter
 ) {
     double rangR, rangI, bR, bI;
     int i, j, r;
+    int taskIdx = t->nextTask;
+    double minR = t->minR[taskIdx];
+    double minI = t->minI[taskIdx];
 
-    rangR = maxR - minR;
-    rangI = maxI - minI;
+    rangR = t->maxR[taskIdx] - minR;
+    rangI = t->maxI[taskIdx] - minI;
 
     rangR = rangR / w;
     rangI = rangI / h;

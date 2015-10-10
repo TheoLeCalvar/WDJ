@@ -6,19 +6,19 @@ void omp(
     char* pixels,
     int w,
     int h,
-    double minR,
-    double minI,
-    double maxR,
-    double maxI,
+    tasks_t * t,
     double cR,
     double cI,
     int iter
 ) {
     double rangR, rangI;
     int i, j, count = 0;
+    int taskIdx = t->nextTask;
+    double minR = t->minR[taskIdx];
+    double minI = t->minI[taskIdx];
 
-    rangR = maxR - minR;
-    rangI = maxI - minI;
+    rangR = t->maxR[taskIdx] - minR;
+    rangI = t->maxI[taskIdx] - minI;
 
     rangR /= w;
     rangI /= h;
@@ -29,7 +29,7 @@ void omp(
         bR = rangR * i;
         bR += minR;
 
-        #pragma omp parallel for shared(bR) schedule(dynamic, 1)
+        #pragma omp parallel for schedule(dynamic, 1)
         for (j = 0; j < w; j++) {
             int r;
             double bI;
@@ -51,7 +51,7 @@ void omp(
         }
 
         count += 1;
-        fprintf(stdout, "%d/%d\r", count, w);
-        fflush(stdout);
+        // fprintf(stdout, "%d/%d\r", count, w);
+        // fflush(stdout);
     }
 }

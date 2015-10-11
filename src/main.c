@@ -9,6 +9,7 @@
 #include "legacy.h"
 #include "omp.h"
 #include "bmp.h"
+#include "export_png.h"
 #include "readconfig.h"
 
 struct option options[] = {
@@ -76,8 +77,6 @@ void usage() {
     printf("Ici on mettra l'usage quand on aura le temps =).\n");
     algo_help();
 }
-
-void pixels2BMP(const char* pixels, int w, int h, const char * path);
 
 int main(int argc, char * argv[]) {
     int width = 1024;
@@ -262,7 +261,7 @@ int main(int argc, char * argv[]) {
         fprintf(stdout, "Generating image.\n");
     }
 
-    pixels2BMP(pixels, width, height, outputPath);
+    pixels2PNG(pixels, width, height, outputPath);
 
     mpfr_clears(maxR, minR, maxI, minI, cR, cI, NULL);
     mpfr_free_cache();

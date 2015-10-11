@@ -8,7 +8,8 @@
 #include "julia.h"
 #include "legacy.h"
 #include "omp.h"
-#include "bmp.h"
+#include "choosealgo.h"
+#include "export_bmp.h"
 #include "export_png.h"
 #include "readconfig.h"
 
@@ -27,51 +28,8 @@ struct option options[] = {
     {"algo",        0, NULL, 'a'},
     {"verbose",     0, NULL, 'v'},
     {"help",        0, NULL, 'h'},
-    {0,             0, 0,     0}
+    {0,             0,    0,   0}
 };
-
-typedef void (*algo_f)(
-    char *,
-    int,
-    int,
-    mpfr_t,
-    mpfr_t,
-    mpfr_t,
-    mpfr_t,
-    mpfr_t,
-    mpfr_t,
-    int
-);
-
-typedef struct algo {
-    char    name[32];
-    char    desc[256];
-    algo_f  func;
-} algo_t;
-
-algo_t algos[] = {
-    {"leg", "legacy algorithm",       &legacy},
-    {"omp", "openMP algorithm",       &omp},
-    {"mpi", "openMP + MPI algorithm", NULL}
-};
-
-#define ALGO_SIZE       (sizeof(algos) / sizeof(algo_t))
-
-int algo_index(const char* name) {
-    for (unsigned int i = 0; i < ALGO_SIZE; i++) {
-        if (!strcmp(name, algos[i].name)) {
-            return i;
-        }
-    }
-
-    return -1;
-}
-
-void algo_help(void) {
-    for (unsigned int i = 0; i < ALGO_SIZE; i++) {
-        printf("    - %-16s : %s\n", algos[i].name, algos[i].desc);
-    }
-}
 
 void usage() {
     printf("Ici on mettra l'usage quand on aura le temps =).\n");

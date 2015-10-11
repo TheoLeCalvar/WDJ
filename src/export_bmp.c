@@ -1,4 +1,4 @@
-#include "bmp.h"
+#include "export_bmp.h"
 #include <stdlib.h>
 #include <stdio.h>
 

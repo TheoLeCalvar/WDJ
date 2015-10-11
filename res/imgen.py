@@ -44,5 +44,5 @@ def generate_zoom(zoom_val, path):
 if len(argv) != 3:
     print("Usage : %s <path_to_image_dir> <zoom_level>\n\nThe zoom level is the log2() of the current number of images / side\n\nzoom level\timages/side\n  0\t\t  1\n  1\t\t  2\n  2\t\t  4\n  3\t\t  8\n...\n")
     exit(-1)
-for i in range(int(argv[2]), -1, -1):
+for i in range(int(argv[2]) - 1, -1, -1):
     generate_zoom(i, argv[1])

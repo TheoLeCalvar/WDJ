@@ -142,7 +142,7 @@ int main(int argc, char * argv[]) {
                 break;
 
             case 'o':
-                outputPath = optarg;
+                strcpy(outputPath, optarg);
                 break;
 
             case 'a':

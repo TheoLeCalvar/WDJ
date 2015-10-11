@@ -4,6 +4,7 @@
 #include <mpfr.h>
 
 #include "readconfig.h"
+#include "choosealgo.h"
 
 int readconfigfile(
     int *w,
@@ -57,9 +58,14 @@ int readconfigfile(
             continue;
         }
 
-        // TODO : use algo_index()
-        if (sscanf(line, "a %d", a)) {
-            fprintf(stdout, "Algorithm : %d\n", *a);
+        if (sscanf(line, "a %s", buffer)) {
+            (*a) = algo_index(buffer);
+            if ((*a) < 0) {
+                printf("wrong algorithm. Choose one :\n");
+                algo_help();
+                return -1;
+            }
+            fprintf(stdout, "Algorithm : %s\n", buffer);
             continue;
         }
 

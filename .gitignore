@@ -32,6 +32,8 @@ bin/
 obj/
 *.bmp
 *.jpg
+cachegrind.out.*
+callgrind.out.*
 
 # Debug files
 *.dSYM/

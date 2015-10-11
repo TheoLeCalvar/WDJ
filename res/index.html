@@ -32,9 +32,9 @@
 
 		var map = po.map()
 			.container(document.getElementById("julia_map").appendChild(po.svg("svg")))
-			// .zoomRange([0, 9])
-			.zoom(9)
-			.add(po.image().url("images/9-{Y}-{X}.png"))
+			.zoomRange([0, 7])
+			.zoom(0)
+			.add(po.image().url("images/{Z}-{Y}-{X}.png"))
 			.add(po.interact())
 			.add(po.compass().pan("none"));
 

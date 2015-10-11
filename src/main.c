@@ -7,6 +7,7 @@
 #include <png.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <math.h>
 
 #include "legacy.h"
 #include "omp.h"
@@ -14,6 +15,7 @@
 #include "export_png.h"
 
 #include "task.h"
+#include "log.h"
 
 struct option options[] = {
     {"minR",        0, NULL, 'r'},
@@ -40,6 +42,7 @@ typedef void (*algo_f)(
     int,
     int,
     tasks_t *,
+    int,
     double,
     double,
     int
@@ -100,6 +103,7 @@ int main(int argc, char * argv[]) {
     int algo = 0;
     char * pixels = NULL;
     char hostname[256];
+    int zoom = 0;
     tasks_t tasks;
 
     while (
@@ -204,33 +208,27 @@ int main(int argc, char * argv[]) {
     gethostname(hostname, 256);
 
     pixels = malloc(3 * blockWidth * blockHeight * sizeof(char));
+    zoom = log2(width / blockWidth);
 
-    for (; tasks.nextTask <= tasks.finalTask; ++tasks.nextTask) {
+    for (int t = 0; t + tasks.offset <= tasks.finalTask; ++t) {
         char fileName[256];
-        char dirname1[256];
-        char dirname2[256];
 
-        int blockX = tasks.nextTask % (width / blockWidth);
-        int blockY = tasks.nextTask / (width / blockWidth);
+        int blockX = (t + tasks.offset) % (width / blockWidth);
+        int blockY = (t + tasks.offset) / (width / blockWidth);
 
         algos[algo].func(
             pixels,
             blockWidth,
             blockHeight,
             &tasks,
+            t,
             cR,
             cI,
             iterations
         );
 
-        printf("Task %ld done with success on %s.\n", tasks.nextTask, hostname);
-
-        // sprintf(dirname1, "res/Map0/LayerA/Zoom0/%d", blockY);
-        // sprintf(dirname2, "%s/%d", dirname1, blockX);
-        sprintf(fileName, "res/images/3-%d-%d.png", blockX, blockY);
-
-        // mkdir(dirname1, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-        // mkdir(dirname2, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        log_info("Task %d (%d,%d) done with success on %s.", t, blockY, blockX, hostname);
+        sprintf(fileName, "res/images/%d-%d-%d.png", zoom, blockY, blockX);
 
         pixels2PNG(pixels, blockWidth, blockHeight, fileName);
     }

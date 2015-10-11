@@ -2,14 +2,12 @@
 #define task_h
 
 typedef struct tasks_t {
-    double minR[2047];
-    double maxR[2047];
-    double minI[2047];
-    double maxI[2047];
+    double minR[16384];
+    double maxR[16384];
+    double minI[16384];
+    double maxI[16384];
     long finalTask;
-    long nextTask;
-    //pading on 64 bytes
-    long foo;
+    long offset;
     long bar;
 } tasks_t;
 

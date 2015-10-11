@@ -54,23 +54,24 @@ void getTasks( tasks_t * t,
     log_info("Node %d, %d total nodes.", rank, nbNodes);
     log_info("Taking care of blocks %d to %d (%d blocks assigned).", firstBlock, lastBlock, lastBlock - firstBlock + 1);
 
-    t->nextTask = firstBlock;
     t->finalTask = lastBlock;
+    t->offset = firstBlock;
 
-    for (int i = firstBlock; i <= lastBlock; ++i) {
+    for (int i = firstBlock, j = 0; i <= lastBlock; ++i, ++j) {
         int blockX = i % blocksPerLine;
         int blockY = i / blocksPerLine;
 
         log_info("Block %d (%d,%d) for node %d.", i, blockX, blockY, rank);
 
-        t->minR[i] = minR + rangR * blockX * blockWidth;
-        t->maxR[i] = minR + rangR * (blockX + 1) * blockWidth;
+        t->minR[j] = minR + rangR * blockX * blockWidth;
+        t->maxR[j] = minR + rangR * (blockX + 1) * blockWidth;
 
 
-        t->minI[i] = minI + rangI * blockY * blockHeight;
-        t->maxI[i] = minI + rangI * (blockY + 1) * blockHeight;
+        t->minI[j] = minI + rangI * blockY * blockHeight;
+        t->maxI[j] = minI + rangI * (blockY + 1) * blockHeight;
 
-        log_info("Task for block %d : minR %lf, maxR %lf, minI %lf, maxI %lf.", i, t->minR[i], t->maxR[i], t->minI[i], t->maxI[i]);
+        log_info("Task for block %d : minR %lf, maxR %lf, minI %lf, maxI %lf.",
+                    i, t->minR[j], t->maxR[j], t->minI[j], t->maxI[j]);
     }
 
     return;

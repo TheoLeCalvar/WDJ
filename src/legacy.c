@@ -6,13 +6,13 @@ void legacy(
     int w,
     int h,
     tasks_t * t,
+    int taskIdx,
     double cR,
     double cI,
     int iter
 ) {
     double rangR, rangI, bR, bI;
     int i, j, r;
-    int taskIdx = t->nextTask;
     double minR = t->minR[taskIdx];
     double minI = t->minI[taskIdx];
 

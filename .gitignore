@@ -36,3 +36,6 @@ obj/
 
 # Debug files
 *.dSYM/
+
+# VIM swap files
+*.swp

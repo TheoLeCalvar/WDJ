@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include "export_png.h"
 
-
 void pixels2PNG(const char *pixels, int w, int h, const char *path){
 	FILE * f = NULL;
 	png_structp png_ptr  = NULL;
@@ -47,5 +46,5 @@ void pixels2PNG(const char *pixels, int w, int h, const char *path){
 	fclose(f);
 
 	png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
-	png_destroy_write_struct(&png_ptr, NULL);
+	png_destroy_write_struct(&png_ptr, &info_ptr);
 }

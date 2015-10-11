@@ -65,7 +65,7 @@ int main(int argc, char * argv[]) {
                 return 0;
 
             case 'f':
-                if ( readconfigfile(
+                if (readconfigfile(
                       &width,
                       &height,
                       &iterations,
@@ -202,6 +202,8 @@ int main(int argc, char * argv[]) {
     if (mpfr_nan_p(maxI)) {
         mpfr_set_str(maxI, "2", 0, MPFR_RNDN);
     }
+
+    fprintf(stderr, "options %ld, algo_t %ld, algos %ld\n", sizeof(options), sizeof(algo_t), sizeof(algos));
 
     algos[algo].func(pixels,
         width,

@@ -24,7 +24,7 @@ int readconfigfile(
     FILE *f = fopen(fn, "r");
 
     if (f == NULL) {
-        fprintf(stderr, "file does not exist %s\n", fn);
+        fprintf(stderr, "Config file does not exist (%s)\n", fn);
         return -1;
     }
 
@@ -61,7 +61,7 @@ int readconfigfile(
         if (sscanf(line, "a %s", buffer)) {
             (*a) = algo_index(buffer);
             if ((*a) < 0) {
-                printf("wrong algorithm. Choose one :\n");
+                fprintf(stderr, "Invalid algorithm. Choose one :\n");
                 algo_help();
                 return -1;
             }
@@ -75,38 +75,56 @@ int readconfigfile(
         }
 
         if (sscanf(line, "minR %s", buffer)) {
+            if (mpfr_set_str(minR, buffer, 0, MPFR_RNDN)){
+                fprintf(stderr, "Invalid number format (%s)\n", buffer);
+                return -1;
+            }
             fprintf(stdout, "minR : %s\n", buffer);
-            mpfr_set_str(minR, buffer, 0, MPFR_RNDN);
             continue;
         }
 
         if (sscanf(line, "maxR %s", buffer)) {
+            if (mpfr_set_str(maxR, buffer, 0, MPFR_RNDN)){
+                fprintf(stderr, "Invalid number format (%s)\n", buffer);
+                return -1;
+            }
             fprintf(stdout, "maxR : %s\n", buffer);
-            mpfr_set_str(maxR, buffer, 0, MPFR_RNDN);
             continue;
         }
 
         if (sscanf(line, "minI %s", buffer)) {
+            if (mpfr_set_str(minI, buffer, 0, MPFR_RNDN)){
+                fprintf(stderr, "Invalid number format (%s)\n", buffer);
+                return -1;
+            }
             fprintf(stdout, "minI : %s\n", buffer);
-            mpfr_set_str(minI, buffer, 0, MPFR_RNDN);
             continue;
         }
 
         if (sscanf(line, "maxI %s", buffer)) {
+            if (mpfr_set_str(maxI, buffer, 0, MPFR_RNDN)){
+                fprintf(stderr, "Invalid number format (%s)\n", buffer);
+                return -1;
+            }
             fprintf(stdout, "maxI : %s\n", buffer);
-            mpfr_set_str(maxI, buffer, 0, MPFR_RNDN);
             continue;
         }
 
         if (sscanf(line, "cR %s", buffer)) {
+            if (mpfr_set_str(cR, buffer, 0, MPFR_RNDN)){
+                fprintf(stderr, "Invalid number format (%s)\n", buffer);
+                return -1;
+            }
             fprintf(stdout, "cR : %s\n", buffer);
-            mpfr_set_str(cR, buffer, 0, MPFR_RNDN);
             continue;
         }
 
         if (sscanf(line, "cI %s", buffer)) {
+            if (mpfr_set_str(cI, buffer, 0, MPFR_RNDN)){
+                fprintf(stderr, "Invalid number format (%s)\n", buffer);
+                return -1;
+            }
             fprintf(stdout, "cI : %s\n", buffer);
-            mpfr_set_str(cI, buffer, 0, MPFR_RNDN);
             continue;
         }
     }

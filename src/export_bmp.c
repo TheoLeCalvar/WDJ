@@ -1,6 +1,6 @@
-#include "export_bmp.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include "export_bmp.h"
 
 void pixels2BMP(const char* pixels, int w, int h, const char * path) {
     FILE *f = fopen(path, "wb");
@@ -12,7 +12,6 @@ void pixels2BMP(const char* pixels, int w, int h, const char * path) {
 
     int filesize = 54 + 3*w*h;
     //w is your image width, h is image height, both int
-
 
     unsigned char bmpfileheader[14] = {'B','M', 0,0,0,0, 0,0, 0,0, 54,0,0,0};
     unsigned char bmpinfoheader[40] = {40,0,0,0, 0,0,0,0, 0,0,0,0, 1,0, 24,0};

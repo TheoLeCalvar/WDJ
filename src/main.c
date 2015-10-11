@@ -228,7 +228,7 @@ int main(int argc, char * argv[]) {
 
         // sprintf(dirname1, "res/Map0/LayerA/Zoom0/%d", blockY);
         // sprintf(dirname2, "%s/%d", dirname1, blockX);
-        sprintf(fileName, "res/images/9-%d-%d.png", blockX, blockY);
+        sprintf(fileName, "res/images/3-%d-%d.png", blockX, blockY);
 
         // mkdir(dirname1, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
         // mkdir(dirname2, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);

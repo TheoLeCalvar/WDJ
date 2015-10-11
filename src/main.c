@@ -203,8 +203,6 @@ int main(int argc, char * argv[]) {
         mpfr_set_str(maxI, "2", 0, MPFR_RNDN);
     }
 
-    fprintf(stderr, "options %ld, algo_t %ld, algos %ld\n", sizeof(options), sizeof(algo_t), sizeof(algos));
-
     algos[algo].func(pixels,
         width,
         height,

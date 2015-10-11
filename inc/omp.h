@@ -12,6 +12,7 @@ void omp(
     int w,
     int h,
     tasks_t * tasks,
+    int taskIdx,
     double cR,
     double cI,
     int iter

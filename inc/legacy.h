@@ -12,6 +12,7 @@ void legacy(
     int w,
     int h,
     tasks_t * t,
+    int taskIdx,
     double cR,
     double cI,
     int iter

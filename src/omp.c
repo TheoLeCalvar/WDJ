@@ -7,13 +7,13 @@ void omp(
     int w,
     int h,
     tasks_t * t,
+    int taskIdx,
     double cR,
     double cI,
     int iter
 ) {
     double rangR, rangI;
-    int i, j, count = 0;
-    int taskIdx = t->nextTask;
+    int size = w * h;
     double minR = t->minR[taskIdx];
     double minI = t->minI[taskIdx];
 
@@ -23,35 +23,24 @@ void omp(
     rangR /= w;
     rangI /= h;
 
-    for (i = 0; i < h; i++) {
-        double bR;
+    #pragma omp parallel for schedule(dynamic, 64)
+    for (int k = 0; k < size; ++k) {
+        int r;
+        int     i = k % w;
+        int     j = k / w;
+        double  bR = minR + rangR * i;
+        double  bI = minI + rangI * j;
 
-        bR = rangR * i;
-        bR += minR;
+        r = iterateOverJulia(bR, bI, cR, cI, iter);
 
-        #pragma omp parallel for schedule(dynamic, 1)
-        for (j = 0; j < w; j++) {
-            int r;
-            double bI;
-
-            bI = rangI * j;
-            bI += minI;
-
-            r = iterateOverJulia(bR, bI, cR, cI, iter);
-
-            if (r >= 0) {
-                pixels[(j  + (i * w)) * 3]      = (char)r;
-                pixels[((j + (i * w)) * 3) + 1] = (char)r;
-                pixels[((j + (i * w)) * 3) + 2] = (char)r;
-            } else {
-                pixels[(j  + (i * w)) * 3]      = 0;
-                pixels[((j + (i * w)) * 3) + 1] = 0;
-                pixels[((j + (i * w)) * 3) + 2] = 0;
-            }
+        if (r >= 0) {
+            pixels[k * 3]     = (char)r;
+            pixels[k * 3 + 1] = (char)r;
+            pixels[k * 3 + 2] = (char)r;
+        } else {
+            pixels[k * 3]     = 0;
+            pixels[k * 3 + 1] = 0;
+            pixels[k * 3 + 2] = 0;
         }
-
-        count += 1;
-        // fprintf(stdout, "%d/%d\r", count, w);
-        // fflush(stdout);
     }
 }

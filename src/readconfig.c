@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <mpfr.h>
 
 #include "readconfig.h"
 #include "choosealgo.h"

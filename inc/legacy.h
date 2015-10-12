@@ -1,7 +1,6 @@
 #ifndef legacy_h
 #define legacy_h
 
-#include <mpfr.h>
 #include "julia.h"
 #include "task.h"
 

@@ -1,8 +1,6 @@
 #ifndef __read_config_h
 #define __read_config_h
 
-#include <mpfr.h>
-
 int readconfigfile(
     int *w,
     int *h,

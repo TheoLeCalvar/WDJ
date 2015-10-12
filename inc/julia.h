@@ -2,7 +2,6 @@
 #define julia_h
 
 #include <stdarg.h>
-#include <mpfr.h>
 
 int iterateOverJulia(
     double r,

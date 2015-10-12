@@ -3,7 +3,17 @@
 
 #include <mpfr.h>
 #include "julia.h"
+#include "task.h"
 
-void legacy(char* pixels, int w, int h, mpfr_t minR, mpfr_t minI, mpfr_t maxR, mpfr_t maxI, mpfr_t cR, mpfr_t cI, int iter);
+void legacy(
+    char* pixels,
+    int w,
+    int h,
+    tasks_t * t,
+    int taskIdx,
+    double cR,
+    double cI,
+    int iter
+);
 
 #endif

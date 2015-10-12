@@ -1,16 +1,21 @@
+#include <mpi.h>
 #include <getopt.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdarg.h>
 #include <string.h>
-#include <mpfr.h>
+#include <png.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <math.h>
 
-#include "julia.h"
 #include "legacy.h"
 #include "omp.h"
-#include "choosealgo.h"
-#include "export_bmp.h"
+#include "julia.h"
 #include "export_png.h"
+
+#include "task.h"
+#include "log.h"
+#include "choosealgo.h"
 #include "readconfig.h"
 
 struct option options[] = {
@@ -20,11 +25,11 @@ struct option options[] = {
     {"maxI",        0, NULL, 'I'},
     {"cstR",        0, NULL, 'c'},
     {"cstI",        0, NULL, 'C'},
-    {"precision",   0, NULL, 'p'},
     {"iteration",   0, NULL, 'n'},
-    {"output",      0, NULL, 'o'},
     {"width",       0, NULL, 'W'},
     {"height",      0, NULL, 'H'},
+    {"blockWidth",  0, NULL, 'b'},
+    {"blockHeight", 0, NULL, 'B'},
     {"algo",        0, NULL, 'a'},
     {"verbose",     0, NULL, 'v'},
     {"help",        0, NULL, 'h'},
@@ -39,22 +44,28 @@ void usage() {
 int main(int argc, char * argv[]) {
     int width = 1024;
     int height = 1024;
+    int blockWidth = 16;
+    int blockHeight = 16;
     int iterations = 1000;
-    int precision;
-    mpfr_t minR, maxR, minI, maxI, cR, cI;
+    double minR = -2.5;
+    double maxR = 2.5;
+    double minI = -2;
+    double maxI = 2;
+    double cR = -0.8;
+    double cI = 0.156;
     char verbose = 0;
-    char * outputPath = malloc(128);
     int opt;
     int algo = 0;
     char * pixels = NULL;
-
-    mpfr_inits(minR, maxR, minI, maxI, cR, cI, NULL);
+    char hostname[256];
+    int zoom = 0;
+    tasks_t tasks;
 
     while (
         (opt = getopt_long(
             argc,
             argv,
-            "r:R:i:I:c:C:n:o:W:H:p:a:f:vh",
+            "r:R:i:I:c:C:n:W:H:b:B:a:vh",
             options,
             NULL)
         ) >= 0
@@ -69,14 +80,12 @@ int main(int argc, char * argv[]) {
                       &width,
                       &height,
                       &iterations,
-                      &precision,
-                      minR,
-                      maxR,
-                      minI,
-                      maxI,
-                      cR,
-                      cI,
-                      outputPath,
+                      &minR,
+                      &maxR,
+                      &minI,
+                      &maxI,
+                      &cR,
+                      &cI,
                       &algo,
                       optarg ) == -1) {
                     exit(EXIT_FAILURE);
@@ -95,12 +104,16 @@ int main(int argc, char * argv[]) {
                 height = atoi(optarg);
                 break;
 
-            case 'v':
-                verbose = 1;
+            case 'b':
+                blockHeight = atoi(optarg);
                 break;
 
-            case 'o':
-                strcpy(outputPath, optarg);
+            case 'B':
+                blockWidth = atoi(optarg);
+                break;
+
+            case 'v':
+                verbose = 1;
                 break;
 
             case 'a':
@@ -112,58 +125,28 @@ int main(int argc, char * argv[]) {
                 }
                 break;
 
-            case 'p': {
-                precision = atoi(optarg);
-
-                mpfr_set_default_prec(precision);
-                mpfr_set_prec(minR, precision);
-                mpfr_set_prec(maxR, precision);
-                mpfr_set_prec(minI, precision);
-                mpfr_set_prec(maxI, precision);
-
-                break;
-            }
-
             case 'R':
-                if (mpfr_set_str(maxR, optarg, 0, MPFR_RNDN)) {
-                    printf("Invalid number format (%s)\n", optarg);
-                    exit(1);
-                }
+                sscanf(optarg, "%lf", &maxR);
                 break;
 
             case 'r':
-                if (mpfr_set_str(minR, optarg, 0, MPFR_RNDN)) {
-                    printf("Invalid number format (%s)\n", optarg);
-                    exit(1);
-                }
+                sscanf(optarg, "%lf", &minR);
                 break;
 
             case 'I':
-                if (mpfr_set_str(maxI, optarg, 0, MPFR_RNDN)) {
-                    printf("Invalid number format (%s)\n", optarg);
-                    exit(1);
-                }
+                sscanf(optarg, "%lf", &maxI);
                 break;
 
             case 'i':
-                if (mpfr_set_str(minI, optarg, 0, MPFR_RNDN)) {
-                    printf("Invalid number format (%s)\n", optarg);
-                    exit(1);
-                }
+                sscanf(optarg, "%lf", &minI);
                 break;
 
             case 'C':
-                if (mpfr_set_str(cI, optarg, 0, MPFR_RNDN)) {
-                    printf("Invalid number format (%s)\n", optarg);
-                    exit(1);
-                }
+                sscanf(optarg, "%lf", &cI);
                 break;
 
             case 'c':
-                if (mpfr_set_str(cR, optarg, 0, MPFR_RNDN)) {
-                    printf("Invalid number format (%s)\n", optarg);
-                    exit(1);
-                }
+                sscanf(optarg, "%lf", &cR);
                 break;
 
             case '?':
@@ -177,54 +160,42 @@ int main(int argc, char * argv[]) {
         }
     }
 
-    pixels = malloc(3 * width * height * sizeof(char));
+    MPI_Init( &argc, &argv);
+    getTasks(   &tasks,
+                minR, maxR,
+                minI, maxI,
+                width, height,
+                blockWidth, blockHeight
+            );
+    gethostname(hostname, 256);
 
-    if (mpfr_nan_p(cR)) {
-        mpfr_set_str(cR, "-0.8", 0, MPFR_RNDN);
+    pixels = malloc(3 * blockWidth * blockHeight * sizeof(char));
+    zoom = log2(width / blockWidth);
+
+    for (int t = 0; t + tasks.offset <= tasks.finalTask; ++t) {
+        char fileName[256];
+
+        int blockX = (t + tasks.offset) % (width / blockWidth);
+        int blockY = (t + tasks.offset) / (width / blockWidth);
+
+        algos[algo].func(
+            pixels,
+            blockWidth,
+            blockHeight,
+            &tasks,
+            t,
+            cR,
+            cI,
+            iterations
+        );
+
+        log_info("Task %d (%d,%d) done with success on %s.", t, blockY, blockX, hostname);
+        sprintf(fileName, "res/images/%d-%d-%d.png", zoom, blockY, blockX);
+        pixels2PNG(pixels, blockWidth, blockHeight, fileName);
     }
 
-    if (mpfr_nan_p(cI)) {
-        mpfr_set_str(cI, "0.156", 0, MPFR_RNDN);
-    }
-
-    if (mpfr_nan_p(minR)) {
-        mpfr_set_str(minR, "-2.5", 0, MPFR_RNDN);
-    }
-
-    if (mpfr_nan_p(maxR)) {
-        mpfr_set_str(maxR, "2.5", 0, MPFR_RNDN);
-    }
-
-    if (mpfr_nan_p(minI)) {
-        mpfr_set_str(minI, "-2", 0, MPFR_RNDN);
-    }
-
-    if (mpfr_nan_p(maxI)) {
-        mpfr_set_str(maxI, "2", 0, MPFR_RNDN);
-    }
-
-    algos[algo].func(pixels,
-        width,
-        height,
-        minR,
-        minI,
-        maxR,
-        maxI,
-        cR,
-        cI,
-        iterations
-    );
-
-    if (verbose) {
-        fprintf(stdout, "Generating image.\n");
-    }
-
-    pixels2PNG(pixels, width, height, outputPath);
-
-    mpfr_clears(maxR, minR, maxI, minI, cR, cI, NULL);
-    mpfr_free_cache();
     free(pixels);
-    free(outputPath);
+    MPI_Finalize();
 
     return 0;
 }

@@ -35,5 +35,11 @@ obj/
 cachegrind.out.*
 callgrind.out.*
 
+*.png
+*.bmp
+
 # Debug files
 *.dSYM/
+
+# VIM swap files
+*.swp

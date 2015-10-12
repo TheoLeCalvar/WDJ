@@ -8,12 +8,10 @@ typedef void (*algo_f)(
     char *,
     int,
     int,
-    mpfr_t,
-    mpfr_t,
-    mpfr_t,
-    mpfr_t,
-    mpfr_t,
-    mpfr_t,
+    tasks_t *,
+    int,
+    double,
+    double,
     int
 );
 

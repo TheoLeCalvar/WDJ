@@ -8,7 +8,8 @@
 void getTasks( tasks_t * t,
                 double minR, double maxR,
                 double minI, double maxI,
-                int width, int height, int blockWidth, int blockHeight) {
+                int width, int height, int blockWidth, int blockHeight,
+                int usempi) {
     int nbNodes;
     int rank;
     int nbBlocks, blocksPerNode;
@@ -22,9 +23,13 @@ void getTasks( tasks_t * t,
     rangR /= width;
     rangI /= height;
 
-
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &nbNodes);
+    if (!usempi) {
+        nbNodes = 1;
+        rank = 0;
+    } else {
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_size(MPI_COMM_WORLD, &nbNodes);
+    }
 
     if ((width % blockWidth != 0) || (height % blockHeight != 0)) {
         log_err( "Width or height not compatible with block size.\n"
@@ -77,8 +82,8 @@ void getTasks( tasks_t * t,
     return;
 
 error:
-
-    MPI_Finalize();
+    if (usempi)
+        MPI_Finalize();
 
     exit(0);
 }

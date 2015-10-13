@@ -15,7 +15,8 @@ void getTasks( tasks_t * t,
                 double minR, double maxR,
                 double minI, double maxI,
                 int width, int height,
-                int blockWidth, int blockHeight);
+                int blockWidth, int blockHeight,
+                int usempi);
 
 void askForTasks(tasks_t * t);
 void giveTasks(tasks_t * t);

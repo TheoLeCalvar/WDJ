@@ -13,7 +13,8 @@ void omp(
     int taskIdx,
     double cR,
     double cI,
-    int iter
+    int iter,
+    int colorized
 );
 
 #endif

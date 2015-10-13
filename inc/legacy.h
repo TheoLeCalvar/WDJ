@@ -12,7 +12,8 @@ void legacy(
     int taskIdx,
     double cR,
     double cI,
-    int iter
+    int iter,
+    int colorized
 );
 
 #endif

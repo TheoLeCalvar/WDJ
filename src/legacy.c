@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "legacy.h"
+#include "color.h"
 
 void legacy(
     char* pixels,
@@ -9,7 +10,8 @@ void legacy(
     int taskIdx,
     double cR,
     double cI,
-    int iter
+    int iter,
+    int colorized
 ) {
     double rangR, rangI, bR, bI;
     int i, j, r;
@@ -33,13 +35,17 @@ void legacy(
             r = iterateOverJulia(bR, bI, cR, cI, iter);
 
             if (r >= 0) {
-                pixels[(i + (j * w)) * 3] = (char)r;
-                pixels[((i + (j * w)) * 3) + 1] = (char)r;
-                pixels[((i + (j * w)) * 3) + 2] = (char)r;
+                if (colorized) {
+                    val2RGB(pixels + (i + (j * w) * 3), r);
+                } else {
+                    val2Grey(pixels + (i + (j * w) * 3), r);
+                }
             } else {
-                pixels[(i + (j * w)) * 3] = 0;
-                pixels[((i + (j * w)) * 3) + 1] = 0;
-                pixels[((i + (j * w)) * 3) + 2] = 0;
+                if (colorized) {
+                    val2RGB(pixels + (i + (j * w) * 3), 640);
+                } else {
+                    val2Grey(pixels + (i + (j * w) * 3), 640);
+                }
             }
         }
 

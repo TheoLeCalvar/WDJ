@@ -169,10 +169,14 @@ int main(int argc, char * argv[]) {
             );
     gethostname(hostname, 256);
 
-    pixels = malloc(3 * blockWidth * blockHeight * sizeof(char));
+    if ((pixels = malloc(3 * blockWidth * blockHeight * sizeof(char))) == NULL){
+		log_err("Failed to allocate pixels matrix");
+		exit(EXIT_FAILURE);
+	}
     zoom = log2(width / blockWidth);
 
     for (int t = 0; t + tasks.offset <= tasks.finalTask; ++t) {
+		// PLACEHOLDER : check_messages
         char fileName[256];
 
         int blockX = (t + tasks.offset) % (width / blockWidth);
@@ -188,6 +192,8 @@ int main(int argc, char * argv[]) {
             cI,
             iterations
         );
+
+		// PLACEHOLDER : moar_tasks
 
         log_info("Task %d (%d,%d) done with success on %s.", t, blockY, blockX, hostname);
         sprintf(fileName, "res/images/%d-%d-%d.png", zoom, blockY, blockX);

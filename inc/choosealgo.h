@@ -12,6 +12,7 @@ typedef void (*algo_f)(
     int,
     double,
     double,
+    int,
     int
 );
 

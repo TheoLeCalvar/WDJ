@@ -8,7 +8,8 @@
 void getTasks( tasks_t * t,
                 double minR, double maxR,
                 double minI, double maxI,
-                int width, int height, int blockWidth, int blockHeight) {
+                int width, int height, int blockWidth, int blockHeight,
+                int usempi) {
     int nbNodes;
     int rank;
     int nbBlocks, blocksPerNode;
@@ -22,9 +23,13 @@ void getTasks( tasks_t * t,
     rangR /= width;
     rangI /= height;
 
-
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &nbNodes);
+    if (!usempi) {
+        nbNodes = 1;
+        rank = 0;
+    } else {
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_size(MPI_COMM_WORLD, &nbNodes);
+    }
 
     if ((width % blockWidth != 0) || (height % blockHeight != 0)) {
         log_err( "Width or height not compatible with block size.\n"
@@ -54,7 +59,13 @@ void getTasks( tasks_t * t,
     log_info("Node %d, %d total nodes.", rank, nbNodes);
     log_info("Taking care of blocks %d to %d (%d blocks assigned).", firstBlock, lastBlock, lastBlock - firstBlock + 1);
 
-    t->finalTask = lastBlock;
+	// Min/max array allocation
+	if ((t->bound = (double *)malloc((lastBlock - firstBlock + 1) * sizeof(double) * 4)) == NULL){
+		log_err("! Allocation failed in a function");
+		goto error;
+	}
+
+	t->finalTask = lastBlock;
     t->offset = firstBlock;
 
     for (int i = firstBlock, j = 0; i <= lastBlock; ++i, ++j) {
@@ -63,22 +74,22 @@ void getTasks( tasks_t * t,
 
         log_info("Block %d (%d,%d) for node %d.", i, blockX, blockY, rank);
 
-        t->minR[j] = minR + rangR * blockX * blockWidth;
-        t->maxR[j] = minR + rangR * (blockX + 1) * blockWidth;
+        MINR(t->bound, j) = minR + rangR * blockX * blockWidth;
+        MAXR(t->bound, j) = minR + rangR * (blockX + 1) * blockWidth;
 
 
-        t->minI[j] = minI + rangI * blockY * blockHeight;
-        t->maxI[j] = minI + rangI * (blockY + 1) * blockHeight;
+        MINI(t->bound, j) = minI + rangI * blockY * blockHeight;
+        MAXI(t->bound, j) = minI + rangI * (blockY + 1) * blockHeight;
 
         log_info("Task for block %d : minR %lf, maxR %lf, minI %lf, maxI %lf.",
-                    i, t->minR[j], t->maxR[j], t->minI[j], t->maxI[j]);
+                    i, MINR(t->bound, j), MAXR(t->bound, j), MINI(t->bound, j), MAXI(t->bound, j));
     }
 
     return;
 
 error:
-
-    MPI_Finalize();
+    if (usempi)
+        MPI_Finalize();
 
     exit(0);
 }

@@ -1,11 +1,13 @@
 #ifndef task_h
 #define task_h
 
+#define MINR(tab, i) tab[(i * 4)]
+#define MAXR(tab, i) tab[(i * 4) + 1]
+#define MINI(tab, i) tab[(i * 4) + 2]
+#define MAXI(tab, i) tab[(i * 4) + 3]
+
 typedef struct tasks_t {
-    double minR[16384];
-    double maxR[16384];
-    double minI[16384];
-    double maxI[16384];
+    double *bound;
     long finalTask;
     long offset;
     long bar;
@@ -15,7 +17,8 @@ void getTasks( tasks_t * t,
                 double minR, double maxR,
                 double minI, double maxI,
                 int width, int height,
-                int blockWidth, int blockHeight);
+                int blockWidth, int blockHeight,
+                int usempi);
 
 void askForTasks(tasks_t * t);
 void giveTasks(tasks_t * t);

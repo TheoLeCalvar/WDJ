@@ -59,7 +59,13 @@ void getTasks( tasks_t * t,
     log_info("Node %d, %d total nodes.", rank, nbNodes);
     log_info("Taking care of blocks %d to %d (%d blocks assigned).", firstBlock, lastBlock, lastBlock - firstBlock + 1);
 
-    t->finalTask = lastBlock;
+	// Min/max array allocation
+	if ((t->bound = (double *)malloc((lastBlock - firstBlock + 1) * sizeof(double) * 4)) == NULL){
+		log_err("! Allocation failed in a function");
+		goto error;
+	}
+
+	t->finalTask = lastBlock;
     t->offset = firstBlock;
 
     for (int i = firstBlock, j = 0; i <= lastBlock; ++i, ++j) {
@@ -68,15 +74,15 @@ void getTasks( tasks_t * t,
 
         log_info("Block %d (%d,%d) for node %d.", i, blockX, blockY, rank);
 
-        t->minR[j] = minR + rangR * blockX * blockWidth;
-        t->maxR[j] = minR + rangR * (blockX + 1) * blockWidth;
+        MINR(t->bound, j) = minR + rangR * blockX * blockWidth;
+        MAXR(t->bound, j) = minR + rangR * (blockX + 1) * blockWidth;
 
 
-        t->minI[j] = minI + rangI * blockY * blockHeight;
-        t->maxI[j] = minI + rangI * (blockY + 1) * blockHeight;
+        MINI(t->bound, j) = minI + rangI * blockY * blockHeight;
+        MAXI(t->bound, j) = minI + rangI * (blockY + 1) * blockHeight;
 
         log_info("Task for block %d : minR %lf, maxR %lf, minI %lf, maxI %lf.",
-                    i, t->minR[j], t->maxR[j], t->minI[j], t->maxI[j]);
+                    i, MINR(t->bound, j), MAXR(t->bound, j), MINI(t->bound, j), MAXI(t->bound, j));
     }
 
     return;

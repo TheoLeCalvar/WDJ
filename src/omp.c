@@ -16,11 +16,11 @@ void omp(
 ) {
     double rangR, rangI;
     int size = w * h;
-    double minR = t->minR[taskIdx];
-    double minI = t->minI[taskIdx];
+    double minR = MINR(t->bound, taskIdx);
+    double minI = MINI(t->bound, taskIdx);
 
-    rangR = t->maxR[taskIdx] - minR;
-    rangI = t->maxI[taskIdx] - minI;
+    rangR = MAXR(t->bound, taskIdx) - minR;
+    rangI = MAXI(t->bound, taskIdx) - minI;
 
     rangR /= w;
     rangI /= h;

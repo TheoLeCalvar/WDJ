@@ -70,7 +70,7 @@ int main(int argc, char * argv[]) {
         (opt = getopt_long(
             argc,
             argv,
-            "r:R:i:I:c:C:n:W:H:b:B:a:mh",
+            "r:R:i:I:c:C:n:W:H:b:B:a:moh",
             options,
             NULL)
         ) >= 0

@@ -1,5 +1,5 @@
 CC = mpicc
-LDFLAGS = -lpng -lm -fopenmp -g
+LDFLAGS = -lpng -lm -fopenmp -lpthread -g
 CFLAGS = -W -Wall -Wextra -O3 $(LDFLAGS)
 #
 # SRC extension

@@ -1,6 +1,71 @@
 #include "export_png.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <mpi.h>
+
+#include "log.h"
+
+char * 	pixelsBuffer = NULL;
+char ** pixelsBufferNames = NULL;
+int 	pixelsBufferSize = 0;
+int 	pixelsBufferUsed = 0;
+char 	pixelsWritterShouldStop = 0;
+pthread_mutex_t pixelsBufferMutex;
+
+void pushPixelsBuffer(char * pixels, int w, int h, char * path) {
+	int spaceNeeded = w * h * 3;
+
+	pthread_mutex_lock(&pixelsBufferMutex);
+
+	if (pixelsBufferUsed + spaceNeeded >= pixelsBufferSize) {
+		char * tmp = realloc(pixelsBuffer, pixelsBufferSize + 100 * 3 * w * h);
+		char ** tmp2 = realloc(pixelsBufferNames, pixelsBufferSize + 100);
+
+		if (!tmp || !tmp2) {
+			log_err("Y'a une couille chef !");
+			MPI_Abort(MPI_COMM_WORLD, 255);
+		}
+
+		pixelsBufferSize += 100;
+		pixelsBuffer = tmp;
+		pixelsBufferNames = tmp2;
+	}
+
+	memcpy(pixelsBuffer + pixelsBufferUsed * h * w * 3, pixels, spaceNeeded * sizeof(char));
+	pixelsBufferNames[pixelsBufferUsed] = strndup(path, 256);
+	pixelsBufferUsed += 1;
+
+	pthread_mutex_unlock(&pixelsBufferMutex);
+}
+
+
+void * writePixelsBuffer(void * args) {
+	struct pixelsWriteArgs * pargs= (struct pixelsWriteArgs*)args;
+	int w, h;
+
+	w = pargs->w;
+	h = pargs->h;
+
+	while (!pixelsWritterShouldStop) {
+		if (pixelsBufferUsed) {
+			pthread_mutex_lock(&pixelsBufferMutex);
+			pixels2PNG(	pixelsBuffer + (pixelsBufferUsed - 1) * w * h * 3, w, h,
+						pixelsBufferNames[pixelsBufferUsed - 1]
+					  );
+			free(pixelsBufferNames[pixelsBufferUsed - 1]);
+			pixelsBufferUsed -= 1;
+			pthread_mutex_unlock(&pixelsBufferMutex);
+		}
+		else {
+			usleep(100);
+		}
+	}
+
+	return NULL;
+}
+
 
 void pixels2PNG(const char *pixels, int w, int h, const char *path){
 	FILE * f = NULL;

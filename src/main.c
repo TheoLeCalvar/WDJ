@@ -60,6 +60,7 @@ int main(int argc, char * argv[]) {
     char hostname[256];
     int zoom = 0;
     tasks_t tasks;
+    pthread_t thread;
 
     while (
         (opt = getopt_long(
@@ -172,6 +173,14 @@ int main(int argc, char * argv[]) {
     pixels = malloc(3 * blockWidth * blockHeight * sizeof(char));
     zoom = log2(width / blockWidth);
 
+    struct pixelsWriteArgs pargs;
+    pargs.w = blockWidth;
+    pargs.h = blockHeight;
+
+    pthread_mutex_init(&pixelsBufferMutex, NULL);
+    pthread_create(&thread, NULL, writePixelsBuffer, &pargs);
+
+
     for (int t = 0; t + tasks.offset <= tasks.finalTask; ++t) {
         char fileName[256];
 
@@ -190,9 +199,14 @@ int main(int argc, char * argv[]) {
         );
 
         log_info("Task %d (%d,%d) done with success on %s.", t, blockY, blockX, hostname);
-        sprintf(fileName, "res/images/%d-%d-%d.png", zoom, blockY, blockX);
-        pixels2PNG(pixels, blockWidth, blockHeight, fileName);
+        snprintf(fileName, 256, "res/images/%d-%d-%d.png", zoom, blockY, blockX);
+
+        pushPixelsBuffer(pixels, blockWidth, blockHeight, fileName);
     }
+
+    pixelsWritterShouldStop = 1;
+    pthread_join(thread, NULL);
+    pthread_mutex_destroy(&pixelsBufferMutex);
 
     free(pixels);
     MPI_Finalize();

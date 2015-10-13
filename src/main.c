@@ -48,8 +48,8 @@ int main(int argc, char * argv[]) {
     int opt;
     int width       = 1024;
     int height      = 1024;
-    int blockWidth  = 16;
-    int blockHeight = 16;
+    int blockWidth  = 512;
+    int blockHeight = 512;
     int iterations  = 1000;
     int algo        = 0;
     int zoom        = 0;

@@ -205,11 +205,11 @@ int main(int argc, char * argv[]) {
 	}
 
 	do{
-		for (tasks.curTask = tasks.offset; tasks.curTask <= tasks.finalTask;) {
+		for (tasks.curTask = 0; tasks.curTask + tasks.offset <= tasks.finalTask;) {
 			char fileName[256];
 			
-			int blockX = (tasks.curTask) % (width / blockWidth);
-			int blockY = (tasks.curTask) / (width / blockWidth);
+			int blockX = (tasks.curTask + tasks.offset) % (width / blockWidth);
+			int blockY = (tasks.curTask + tasks.offset) / (width / blockWidth);
 
 			algos[algo].func(
 				pixels,

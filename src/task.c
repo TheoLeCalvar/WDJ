@@ -97,7 +97,7 @@ error:
 
 char askForTasks(tasks_t * t){
 	int rank, nbNodes;
-	int message = 0; // Content is useless, we just want to ping the potentiel workgivers
+	long msg[2] = {0}; // Content is useless, we just want to ping the potentiel workgivers
 	MPI_Status status;
 
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -107,19 +107,24 @@ char askForTasks(tasks_t * t){
 		return(0);
 	}
 	for (int i = ((rank + 1 == nbNodes)?0:(rank + 1)); i != rank; i = (i + 1) % nbNodes){
-//		MPI_Sendrecv_replace(&message, 1, MPI_INTEGER, i, ASK4TASKS, MPI_ANY_SOURCE, TASKS_ANNOUNCEMENT, MPI_COMM_WORLD, &status);
-		MPI_Send(&message, 1, MPI_INTEGER, i, ASK4TASKS, MPI_COMM_WORLD);
-		MPI_Recv(&message, 1, MPI_INTEGER, MPI_ANY_SOURCE, TASKS_ANNOUNCEMENT, MPI_COMM_WORLD, &status);
+//		MPI_Sendrecv_replace(&msg, 1, MPI_INTEGER, i, ASK4TASKS, MPI_ANY_SOURCE, TASKS_ANNOUNCEMENT, MPI_COMM_WORLD, &status);
+		MPI_Send(msg, 2, MPI_LONG_INT, i, ASK4TASKS, MPI_COMM_WORLD);
+		MPI_Recv(msg, 2, MPI_LONG_INT, MPI_ANY_SOURCE, TASKS_ANNOUNCEMENT, MPI_COMM_WORLD, &status);
 		printf("> [%d] Asking %d for tasks\n", rank, i);
-		if (message > 0){
+
+		if (msg[0] > 0){
 			pthread_mutex_lock(&tasksMutex);
 
 			free(t->bound);
-			if ((t->bound = malloc(message * 4 * sizeof(double))) == NULL){
+			if ((t->bound = malloc(msg[0] * 4 * sizeof(double))) == NULL){
 				log_err("Failed to reallocate tasks array");
 				MPI_Abort(MPI_COMM_WORLD, 42);
 			}
-			MPI_Recv(t->bound, (4 * message) + 1, MPI_DOUBLE, MPI_ANY_SOURCE, TASKS_SENDING, MPI_COMM_WORLD, &status);
+			MPI_Recv(t->bound, 4 * msg[0], MPI_DOUBLE, MPI_ANY_SOURCE, TASKS_SENDING, MPI_COMM_WORLD, &status);
+
+			t->offset = msg[1];
+			t->finalTask = msg[1] + msg[0];
+
 			pthread_mutex_unlock(&tasksMutex);
 
 			return(1);
@@ -132,43 +137,36 @@ char askForTasks(tasks_t * t){
 
 
 void * giveTasks(tasks_t * t){
-	int msg;
+	long msg[2] = {0}; // msg[0] = nbTasks, msg[1] = offset
 	int rank;
-	int nbTasks = 0;
-	int firstTaskToSend = -1;
 	MPI_Status status;
-	double * tasks2Send;
 
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	
 	while (1){
-		MPI_Recv(&msg, 1, MPI_INTEGER, MPI_ANY_SOURCE, ASK4TASKS, MPI_COMM_WORLD, &status);
+		MPI_Recv(msg, 2, MPI_LONG_INT, MPI_ANY_SOURCE, ASK4TASKS, MPI_COMM_WORLD, &status);
 		
 		printf("> [%d] Received request from %d\n", rank, status.MPI_SOURCE);
 		
 		// We take half of the remaining tasks
 		pthread_mutex_lock(&tasksMutex);
 		
-		if (t->curTask != t->finalTask){
-			nbTasks = (t->finalTask - t->curTask) / 2;
-			firstTaskToSend = t->finalTask - nbTasks;
-			t->finalTask = firstTaskToSend - 1;
+		if (t->curTask + t->offset != t->finalTask){
+			msg[0] = (t->finalTask - (t->curTask + t->offset)) / 2;
+			msg[1] = t->finalTask - msg[0];
+			t->finalTask = msg[1] - 1;
 		}
 		// Tasks copy
 		// TODO check return
-		tasks2Send = malloc(((4 * nbTasks) + 1) * sizeof(double));
-		tasks2Send[0] = firstTaskToSend;
-		memcpy(tasks2Send + sizeof(double), t->bound, 4 * nbTasks * sizeof(double));
 		
-		printf("> [%d] Sending %d tasks to %d\n", rank, nbTasks, status.MPI_SOURCE);
+		printf("> [%d] Sending %d tasks to %d\n", rank, msg[0], status.MPI_SOURCE);
 		pthread_mutex_unlock(&tasksMutex);
 
 
-		MPI_Send(&nbTasks, 1, MPI_INTEGER, status.MPI_SOURCE, TASKS_ANNOUNCEMENT, MPI_COMM_WORLD);
-		if (nbTasks > 0){
-			MPI_Send(tasks2Send, (4 * nbTasks) + 1, MPI_DOUBLE, status.MPI_SOURCE, TASKS_SENDING, MPI_COMM_WORLD);
+		MPI_Send(msg, 2, MPI_LONG_INT, status.MPI_SOURCE, TASKS_ANNOUNCEMENT, MPI_COMM_WORLD);
+		if (msg[0] > 0){
+			MPI_Send(&(t->bound[t->finalTask + 1]), (4 * msg[0]), MPI_DOUBLE, status.MPI_SOURCE, TASKS_SENDING, MPI_COMM_WORLD);
 		}
 
-		free(tasks2Send);
 	}
 }

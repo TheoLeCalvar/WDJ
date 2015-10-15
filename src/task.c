@@ -2,6 +2,7 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "log.h"
 
@@ -94,13 +95,80 @@ error:
     exit(0);
 }
 
-void askForTasks(tasks_t * t);
-void giveTasks(tasks_t * t);
+char askForTasks(tasks_t * t){
+	int rank, nbNodes;
+	int message = 0; // Content is useless, we just want to ping the potentiel workgivers
+	MPI_Status status;
 
-void sendResult(int taskIdx, char * pixels) {
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_size(MPI_COMM_WORLD, &nbNodes);
 
+	if (nbNodes == 1){
+		return(0);
+	}
+	for (int i = rank + 1; i != rank; i = (i + 1) % nbNodes){
+//		MPI_Sendrecv_replace(&message, 1, MPI_INTEGER, i, ASK4TASKS, MPI_ANY_SOURCE, TASKS_ANNOUNCEMENT, MPI_COMM_WORLD, &status);
+		MPI_Send(&message, 1, MPI_INTEGER, i, ASK4TASKS, MPI_COMM_WORLD);
+		MPI_Recv(&message, 1, MPI_INTEGER, MPI_ANY_SOURCE, TASKS_ANNOUNCEMENT, MPI_COMM_WORLD, &status);
+		printf("> [%d] Asking %d for tasks\n", rank, i);
+		if (message > 0){
+			pthread_mutex_lock(&tasksMutex);
+
+			free(t->bound);
+			if ((t->bound = malloc(message * 4 * sizeof(double))) == NULL){
+				log_err("Failed to reallocate tasks array");
+				MPI_Abort(MPI_COMM_WORLD, 42);
+			}
+			MPI_Recv(t->bound, (4 * message) + 1, MPI_DOUBLE, MPI_ANY_SOURCE, TASKS_SENDING, MPI_COMM_WORLD, &status);
+			pthread_mutex_unlock(&tasksMutex);
+
+			return(1);
+		}
+	}
+
+	// We asked everybody, and noone has work for us
+	return(0);
 }
 
-void receiveResult() {
 
+void * giveTasks(tasks_t * t){
+	int msg;
+	int rank;
+	int nbTasks = 0;
+	int firstTaskToSend = -1;
+	MPI_Status status;
+	double * tasks2Send;
+
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	
+	while (1){
+		MPI_Recv(&msg, 1, MPI_INTEGER, MPI_ANY_SOURCE, ASK4TASKS, MPI_COMM_WORLD, &status);
+		
+		printf("> [%d] Received request from %d\n", rank, status.MPI_SOURCE);
+		
+		// We take half of the remaining tasks
+		pthread_mutex_lock(&tasksMutex);
+		
+		if (t->curTask != t->finalTask){
+			nbTasks = (t->finalTask - t->curTask) / 2;
+			firstTaskToSend = t->finalTask - nbTasks;
+			t->finalTask = firstTaskToSend - 1;
+		}
+		// Tasks copy
+		// TODO check return
+		tasks2Send = malloc(((4 * nbTasks) + 1) * sizeof(double));
+		tasks2Send[0] = firstTaskToSend;
+		memcpy(tasks2Send + sizeof(double), t->bound, 4 * nbTasks * sizeof(double));
+		
+		printf("> [%d] Sending %d tasks to %d\n", rank, nbTasks, status.MPI_SOURCE);
+		pthread_mutex_unlock(&tasksMutex);
+
+
+		MPI_Send(&nbTasks, 1, MPI_INTEGER, status.MPI_SOURCE, TASKS_ANNOUNCEMENT, MPI_COMM_WORLD);
+		if (nbTasks > 0){
+			MPI_Send(tasks2Send, (4 * nbTasks) + 1, MPI_DOUBLE, status.MPI_SOURCE, TASKS_SENDING, MPI_COMM_WORLD);
+		}
+
+		free(tasks2Send);
+	}
 }

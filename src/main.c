@@ -65,6 +65,7 @@ int main(int argc, char * argv[]) {
     char hostname[256];
     tasks_t tasks;
     pthread_t thread;
+	pthread_t jamy;
 
     while (
         (opt = getopt_long(
@@ -197,37 +198,49 @@ int main(int argc, char * argv[]) {
     pthread_mutex_init(&pixelsBufferMutex, NULL);
     pthread_create(&thread, NULL, writePixelsBuffer, &pargs);
 
+	// Tasks giving
+	pthread_mutex_init(&tasksMutex, NULL);
+	pthread_create(&jamy, NULL, (void * (*)(void *))giveTasks, (void *)&tasks);
 
-    for (int t = 0; t + tasks.offset <= tasks.finalTask; ++t) {
-		// PLACEHOLDER : check_messages
-        char fileName[256];
+	do{
+		for (tasks.curTask = tasks.offset; tasks.curTask <= tasks.finalTask;) {
+			char fileName[256];
+			
+			int blockX = (tasks.curTask) % (width / blockWidth);
+			int blockY = (tasks.curTask) / (width / blockWidth);
 
-        int blockX = (t + tasks.offset) % (width / blockWidth);
-        int blockY = (t + tasks.offset) / (width / blockWidth);
+			algos[algo].func(
+				pixels,
+				blockWidth,
+				blockHeight,
+				&tasks,
+				tasks.curTask,
+				cR,
+				cI,
+				iterations,
+				colorized
+			);
 
-        algos[algo].func(
-            pixels,
-            blockWidth,
-            blockHeight,
-            &tasks,
-            t,
-            cR,
-            cI,
-            iterations,
-            colorized
-        );
 
-		// PLACEHOLDER : moar_tasks
+			log_info("Task %d (%d,%d) done with success on %s.", tasks.curTask, blockY, blockX, hostname);
+			snprintf(fileName, 256, "res/images/%d-%d-%d.png", zoom, blockY, blockX);
 
-        log_info("Task %d (%d,%d) done with success on %s.", t, blockY, blockX, hostname);
-        snprintf(fileName, 256, "res/images/%d-%d-%d.png", zoom, blockY, blockX);
+			pushPixelsBuffer(pixels, blockWidth, blockHeight, fileName);
 
-        pushPixelsBuffer(pixels, blockWidth, blockHeight, fileName);
-    }
+			pthread_mutex_lock(&tasksMutex);
+			++tasks.curTask;
+			pthread_mutex_unlock(&tasksMutex);
+		}
+
+	}while(askForTasks(&tasks));
 
     pixelsWritterShouldStop = 1;
+	pthread_cancel(jamy);
     pthread_join(thread, NULL);
+	pthread_mutex_destroy(&tasksMutex);
     pthread_mutex_destroy(&pixelsBufferMutex);
+
+	free(tasks.curTask);
 
     if (usempi)
         MPI_Finalize();

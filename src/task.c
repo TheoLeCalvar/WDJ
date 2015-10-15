@@ -103,10 +103,10 @@ char askForTasks(tasks_t * t){
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &nbNodes);
 
-	if (rank + 1 == nbNodes){
+	if (nbNodes == 1){
 		return(0);
 	}
-	for (int i = rank + 1; i != rank; i = (i + 1) % nbNodes){
+	for (int i = ((rank + 1 == nbNodes)?0:(rank + 1)); i != rank; i = (i + 1) % nbNodes){
 //		MPI_Sendrecv_replace(&message, 1, MPI_INTEGER, i, ASK4TASKS, MPI_ANY_SOURCE, TASKS_ANNOUNCEMENT, MPI_COMM_WORLD, &status);
 		MPI_Send(&message, 1, MPI_INTEGER, i, ASK4TASKS, MPI_COMM_WORLD);
 		MPI_Recv(&message, 1, MPI_INTEGER, MPI_ANY_SOURCE, TASKS_ANNOUNCEMENT, MPI_COMM_WORLD, &status);

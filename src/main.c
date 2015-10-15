@@ -9,7 +9,6 @@
 #include <math.h>
 #include <quadmath.h>
 
-
 #include "legacy.h"
 #include "omp.h"
 #include "julia.h"
@@ -32,6 +31,7 @@ struct option options[] = {
     {"maxI",        0, NULL, 'I'},
     {"use-mpi",     0, NULL, 'm'},
     {"iteration",   0, NULL, 'n'},
+    {"no-write",    0, NULL, 'N'},
     {"color",       0, NULL, 'o'},
     {"minR",        0, NULL, 'r'},
     {"maxR",        0, NULL, 'R'},
@@ -55,6 +55,7 @@ int main(int argc, char * argv[]) {
     int zoom        = 0;
     int usempi      = 0;
     int colorized   = 0;
+    int nowrite     = 0;
     double minR     = -2.5;
     double maxR     = 2.5;
     double minI     = -2;
@@ -70,7 +71,7 @@ int main(int argc, char * argv[]) {
         (opt = getopt_long(
             argc,
             argv,
-            "r:R:i:I:c:C:n:W:H:b:B:a:moh",
+            "r:R:i:I:c:C:n:W:H:b:B:a:Nohm",
             options,
             NULL)
         ) >= 0
@@ -158,6 +159,10 @@ int main(int argc, char * argv[]) {
                 sscanf(optarg, "%lf", &cR);
                 break;
 
+            case 'N':
+                nowrite = 1;
+                break;
+
             case '?':
                 usage();
                 return 1;
@@ -197,9 +202,8 @@ int main(int argc, char * argv[]) {
     pthread_mutex_init(&pixelsBufferMutex, NULL);
     pthread_create(&thread, NULL, writePixelsBuffer, &pargs);
 
-
     for (int t = 0; t + tasks.offset <= tasks.finalTask; ++t) {
-		// PLACEHOLDER : check_messages
+        // PLACEHOLDER : check_messages
         char fileName[256];
 
         int blockX = (t + tasks.offset) % (width / blockWidth);
@@ -222,7 +226,8 @@ int main(int argc, char * argv[]) {
         log_info("Task %d (%d,%d) done with success on %s.", t, blockY, blockX, hostname);
         snprintf(fileName, 256, "res/images/%d-%d-%d.png", zoom, blockY, blockX);
 
-        pushPixelsBuffer(pixels, blockWidth, blockHeight, fileName);
+        if (!nowrite)
+            pushPixelsBuffer(pixels, blockWidth, blockHeight, fileName);
     }
 
     pixelsWritterShouldStop = 1;

@@ -20,7 +20,7 @@ void pushPixelsBuffer(char * pixels, int w, int h, char * path) {
 	pthread_mutex_lock(&pixelsBufferMutex);
 
 	if (pixelsBufferUsed + spaceNeeded >= pixelsBufferSize) {
-		char * tmp = realloc(pixelsBuffer, pixelsBufferSize + 100 * 3 * w * h);
+		char * tmp   = realloc(pixelsBuffer, pixelsBufferSize + 100 * 3 * w * h);
 		char ** tmp2 = realloc(pixelsBufferNames, pixelsBufferSize + 100);
 
 		if (!tmp || !tmp2) {

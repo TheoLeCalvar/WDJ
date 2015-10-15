@@ -1,6 +1,6 @@
 CC = mpicc
 LDFLAGS = -lpng -lm -fopenmp -lpthread -g
-CFLAGS = -W -Wall -Wextra -O3 -std=c99 $(LDFLAGS)
+CFLAGS = -W -Wall -Wextra -O3 -std=c99 -D_GNU_SOURCE $(LDFLAGS)
 #
 # SRC extension
 #

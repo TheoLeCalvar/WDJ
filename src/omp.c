@@ -25,7 +25,6 @@ void omp(
     rangR /= w;
     rangI /= h;
 
-    #pragma omp parallel for schedule(dynamic, 64)
     for (int k = 0; k < size; ++k) {
         int r;
 

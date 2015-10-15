@@ -198,9 +198,11 @@ int main(int argc, char * argv[]) {
     pthread_mutex_init(&pixelsBufferMutex, NULL);
     pthread_create(&thread, NULL, writePixelsBuffer, &pargs);
 
-	// Tasks giving
-	pthread_mutex_init(&tasksMutex, NULL);
-	pthread_create(&jamy, NULL, (void * (*)(void *))giveTasks, (void *)&tasks);
+	if (usempi){
+		// Tasks giving
+		pthread_mutex_init(&tasksMutex, NULL);
+		pthread_create(&jamy, NULL, (void * (*)(void *))giveTasks, (void *)&tasks);
+	}
 
 	do{
 		for (tasks.curTask = tasks.offset; tasks.curTask <= tasks.finalTask;) {
@@ -240,7 +242,7 @@ int main(int argc, char * argv[]) {
 	pthread_mutex_destroy(&tasksMutex);
     pthread_mutex_destroy(&pixelsBufferMutex);
 
-	free(tasks.curTask);
+	free(tasks.bound);
 
     if (usempi)
         MPI_Finalize();

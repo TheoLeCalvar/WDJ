@@ -103,7 +103,7 @@ char askForTasks(tasks_t * t){
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &nbNodes);
 
-	if (nbNodes == 1){
+	if (rank + 1 == nbNodes){
 		return(0);
 	}
 	for (int i = rank + 1; i != rank; i = (i + 1) % nbNodes){

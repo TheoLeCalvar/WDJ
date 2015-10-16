@@ -48,7 +48,7 @@ void * writePixelsBuffer(void * args) {
 	w = pargs->w;
 	h = pargs->h;
 
-	while (!pixelsWritterShouldStop) {
+	while (!pixelsWritterShouldStop || (pixelsBufferUsed > 0)) {
 		if (pixelsBufferUsed) {
 			pthread_mutex_lock(&pixelsBufferMutex);
 			pixels2PNG(	pixelsBuffer + (pixelsBufferUsed - 1) * w * h * 3, w, h,

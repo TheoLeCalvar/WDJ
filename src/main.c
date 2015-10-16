@@ -233,6 +233,7 @@ int main(int argc, char * argv[]) {
 			++tasks.curTask;
 			pthread_mutex_unlock(&tasksMutex);
 		}
+		free(tasks.bound);
 
 	}while(askForTasks(&tasks));
 
@@ -241,8 +242,6 @@ int main(int argc, char * argv[]) {
     pthread_join(thread, NULL);
 	pthread_mutex_destroy(&tasksMutex);
     pthread_mutex_destroy(&pixelsBufferMutex);
-
-	free(tasks.bound);
 
     if (usempi)
         MPI_Finalize();

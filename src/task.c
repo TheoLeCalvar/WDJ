@@ -97,7 +97,7 @@ error:
 
 char askForTasks(tasks_t * t){
 	int rank, nbNodes;
-	long msg[2] = {0}; // Content is useless, we just want to ping the potentiel workgivers
+	long int msg[2] = {0}; // Content is useless, we just want to ping the potentiel workgivers
 	MPI_Status status;
 
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -107,7 +107,6 @@ char askForTasks(tasks_t * t){
 		return(0);
 	}
 	for (int i = ((rank + 1 == nbNodes)?0:(rank + 1)); i != rank; i = (i + 1) % nbNodes){
-//		MPI_Sendrecv_replace(&msg, 1, MPI_INTEGER, i, ASK4TASKS, MPI_ANY_SOURCE, TASKS_ANNOUNCEMENT, MPI_COMM_WORLD, &status);
 		MPI_Send(msg, 2, MPI_LONG_INT, i, ASK4TASKS, MPI_COMM_WORLD);
 		MPI_Recv(msg, 2, MPI_LONG_INT, MPI_ANY_SOURCE, TASKS_ANNOUNCEMENT, MPI_COMM_WORLD, &status);
 		printf("> [%d] Asking %d for tasks\n", rank, i);
@@ -115,7 +114,6 @@ char askForTasks(tasks_t * t){
 		if (msg[0] > 0){
 			pthread_mutex_lock(&tasksMutex);
 
-			free(t->bound);
 			if ((t->bound = malloc(msg[0] * 4 * sizeof(double))) == NULL){
 				log_err("Failed to reallocate tasks array");
 				MPI_Abort(MPI_COMM_WORLD, 42);
@@ -137,7 +135,7 @@ char askForTasks(tasks_t * t){
 
 
 void * giveTasks(tasks_t * t){
-	long msg[2] = {0}; // msg[0] = nbTasks, msg[1] = offset
+	long int msg[2] = {0}; // msg[0] = nbTasks, msg[1] = offset
 	int rank;
 	MPI_Status status;
 
@@ -156,16 +154,17 @@ void * giveTasks(tasks_t * t){
 			msg[1] = t->finalTask - msg[0];
 			t->finalTask = msg[1] - 1;
 		}
-		// Tasks copy
-		// TODO check return
+		else{
+			msg[0] = 0;
+		}
+		
+		pthread_mutex_unlock(&tasksMutex);
 		
 		printf("> [%d] Sending %d tasks to %d\n", rank, msg[0], status.MPI_SOURCE);
-		pthread_mutex_unlock(&tasksMutex);
-
 
 		MPI_Send(msg, 2, MPI_LONG_INT, status.MPI_SOURCE, TASKS_ANNOUNCEMENT, MPI_COMM_WORLD);
 		if (msg[0] > 0){
-			MPI_Send(&(t->bound[t->finalTask + 1]), (4 * msg[0]), MPI_DOUBLE, status.MPI_SOURCE, TASKS_SENDING, MPI_COMM_WORLD);
+			MPI_Send(&(t->bound[msg[1]]), 4 * msg[0], MPI_DOUBLE, status.MPI_SOURCE, TASKS_SENDING, MPI_COMM_WORLD);
 		}
 
 	}

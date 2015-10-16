@@ -19,7 +19,7 @@ void legacy(
     double minI = MINI(t->bound, taskIdx);
 
     rangR = MAXR(t->bound, taskIdx) - minR;
-    rangI = MAXR(t->bound, taskIdx) - minI;
+    rangI = MAXI(t->bound, taskIdx) - minI;
 
     rangR = rangR / w;
     rangI = rangI / h;
